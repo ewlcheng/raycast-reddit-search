@@ -1,7 +1,18 @@
 import { ActionPanel, Action, Icon, List } from "@raycast/api";
+import RedditPost from "./RedditPost";
 import RedditPostActionPanel from "./RedditPostActionPanel";
 
-export default function RedditPostList({ posts, searching, doSearch, searchRedditUrl }) {
+export default function RedditPostList({
+  posts,
+  searching,
+  doSearch,
+  searchRedditUrl,
+}: {
+  posts: RedditPost[];
+  searching: boolean;
+  doSearch: (query: string) => void;
+  searchRedditUrl: string;
+}) {
   return (
     <List isLoading={searching} onSearchTextChange={doSearch} throttle searchBarPlaceholder="Search Reddit...">
       {posts.map((x) => (
