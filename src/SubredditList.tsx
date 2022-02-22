@@ -3,18 +3,16 @@ import fetch, { AbortError } from "node-fetch";
 import { useRef, useState } from "react";
 import { URLSearchParams } from "url";
 import RedditPost from "./RedditPost";
-import RedditPostActionPanel from "./RedditPostActionPanel";
-import SubredditList from "./SubredditList";
+import FilterBySubredditPostList from "./FilterBySubredditPostList";
 
 const redditUrl = "https://www.reddit.com/";
 const searchUrl = "https://www.reddit.com/search";
 const apiUrl = "https://www.reddit.com/search.json";
 
-export default function RedditPostList() {
+export default function SubredditPostList() {
   const [results, setResults] = useState<RedditPost[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchRedditUrl, setSearchRedditUrl] = useState("");
-  const [showSearchTypes, setShowSearchTypes] = useState(true);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const doSearch = async (query: string) => {
@@ -26,14 +24,12 @@ export default function RedditPostList() {
 
     if (!query) {
       setSearching(false);
-      setShowSearchTypes(true);
       return;
     }
 
-    setShowSearchTypes(false);
-
     const params = new URLSearchParams();
     params.append("q", query);
+    params.append("type", "sr");
 
     setSearchRedditUrl(searchUrl + "?" + params.toString());
 
@@ -57,13 +53,8 @@ export default function RedditPostList() {
                 id: string;
                 title: string;
                 url: string;
-                permalink: string;
-                selftext?: string;
                 created_utc: number;
-                thumbnail: string;
-                subreddit: string;
-                url_overridden_by_dest?: string;
-                is_video: boolean;
+                display_name_prefixed: string;
               };
             }
           ];
@@ -75,19 +66,9 @@ export default function RedditPostList() {
           ({
             id: x.data.id,
             title: x.data.title,
-            url: redditUrl + x.data.permalink,
-            description: x.data.selftext,
-            imageUrl:
-              x.data.is_video ||
-              (x.data.url_overridden_by_dest &&
-                !x.data.url_overridden_by_dest.endsWith(".jpg") &&
-                !x.data.url_overridden_by_dest.endsWith(".gif") &&
-                !x.data.url_overridden_by_dest.endsWith(".png"))
-                ? ""
-                : x.data.url_overridden_by_dest,
+            url: redditUrl + x.data.url.substring(1),
             created: new Date(x.data.created_utc * 1000).toLocaleString(),
-            thumbnail: x.data.thumbnail,
-            subreddit: x.data.subreddit,
+            subreddit: x.data.display_name_prefixed.substring(2),
           } as RedditPost)
       );
 
@@ -108,21 +89,7 @@ export default function RedditPostList() {
   };
 
   return (
-    <List isLoading={searching} onSearchTextChange={doSearch} throttle searchBarPlaceholder="Search Reddit...">
-      {showSearchTypes && (
-        <List.Section title="More ways to search">
-          <List.Item
-            key="searchOnRedditForSubreddits"
-            icon={Icon.MagnifyingGlass}
-            title="Search subreddits..."
-            actions={
-              <ActionPanel>
-                <Action.Push title="Search subreddits" target={<SubredditList />} />
-              </ActionPanel>
-            }
-          />
-        </List.Section>
-      )}
+    <List isLoading={searching} onSearchTextChange={doSearch} throttle searchBarPlaceholder="Search Subreddits...">
       {results.map((x) => (
         <List.Item
           key={x.id}
@@ -133,7 +100,15 @@ export default function RedditPostList() {
           }
           title={x.title}
           accessoryTitle={`Posted ${x.created} r/${x.subreddit}`}
-          actions={<RedditPostActionPanel data={x} />}
+          actions={
+            <ActionPanel>
+              <Action.Push
+                title="Search Reddit..."
+                target={<FilterBySubredditPostList subredditName={x.subreddit} subreddit={x.url} />}
+              />
+              <Action.OpenInBrowser url={x.url} icon={Icon.Globe} />
+            </ActionPanel>
+          }
         />
       ))}
       {results.length > 0 && (

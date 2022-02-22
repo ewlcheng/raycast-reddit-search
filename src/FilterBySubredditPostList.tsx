@@ -4,17 +4,19 @@ import { useRef, useState } from "react";
 import { URLSearchParams } from "url";
 import RedditPost from "./RedditPost";
 import RedditPostActionPanel from "./RedditPostActionPanel";
-import SubredditList from "./SubredditList";
 
 const redditUrl = "https://www.reddit.com/";
-const searchUrl = "https://www.reddit.com/search";
-const apiUrl = "https://www.reddit.com/search.json";
 
-export default function RedditPostList() {
+export default function FilterBySubredditPostList({
+  subreddit,
+  subredditName,
+}: {
+  subreddit: string;
+  subredditName: string;
+}) {
   const [results, setResults] = useState<RedditPost[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchRedditUrl, setSearchRedditUrl] = useState("");
-  const [showSearchTypes, setShowSearchTypes] = useState(true);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const doSearch = async (query: string) => {
@@ -26,21 +28,19 @@ export default function RedditPostList() {
 
     if (!query) {
       setSearching(false);
-      setShowSearchTypes(true);
       return;
     }
 
-    setShowSearchTypes(false);
-
     const params = new URLSearchParams();
     params.append("q", query);
+    params.append("restrict_sr", "true");
 
-    setSearchRedditUrl(searchUrl + "?" + params.toString());
+    setSearchRedditUrl(subreddit + "search" + "?" + params.toString());
 
     params.append("limit", "10");
 
     try {
-      const response = await fetch(apiUrl + "?" + params.toString(), {
+      const response = await fetch(subreddit + "search.json" + "?" + params.toString(), {
         method: "get",
         signal: abortControllerRef.current.signal,
       });
@@ -108,21 +108,12 @@ export default function RedditPostList() {
   };
 
   return (
-    <List isLoading={searching} onSearchTextChange={doSearch} throttle searchBarPlaceholder="Search Reddit...">
-      {showSearchTypes && (
-        <List.Section title="More ways to search">
-          <List.Item
-            key="searchOnRedditForSubreddits"
-            icon={Icon.MagnifyingGlass}
-            title="Search subreddits..."
-            actions={
-              <ActionPanel>
-                <Action.Push title="Search subreddits" target={<SubredditList />} />
-              </ActionPanel>
-            }
-          />
-        </List.Section>
-      )}
+    <List
+      isLoading={searching}
+      onSearchTextChange={doSearch}
+      throttle
+      searchBarPlaceholder={`Search r/${subredditName}...`}
+    >
       {results.map((x) => (
         <List.Item
           key={x.id}
