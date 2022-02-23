@@ -1,10 +1,9 @@
 import { ActionPanel, Action, Icon, List, showToast, Toast } from "@raycast/api";
 import { AbortError } from "node-fetch";
 import { useRef, useState } from "react";
-import RedditResultSubreddit from "./RedditResultSubreddit";
+import { searchSubreddits } from "./RedditApi/Api";
+import RedditResultSubreddit from "./RedditApi/RedditResultSubreddit";
 import FilterBySubredditPostList from "./FilterBySubredditPostList";
-import { createSearchUrl } from "./UrlBuilder";
-import { searchSubreddits } from "./Api";
 
 export default function SubredditPostList({
   favorites,
@@ -34,16 +33,15 @@ export default function SubredditPostList({
       return;
     }
 
-    setSearchRedditUrl(createSearchUrl("", false, query, "sr", 0));
-
     try {
       const apiResults = await searchSubreddits(query, abortControllerRef.current);
-      for (let i = 0; i < apiResults.length; i++) {
-        const apiResult = apiResults[i];
+      for (let i = 0; i < apiResults.subreddits.length; i++) {
+        const apiResult = apiResults.subreddits[i];
         apiResult.isFavorite = favorites.some((y) => y === apiResult.subreddit);
       }
 
-      setResults(apiResults);
+      setSearchRedditUrl(apiResults.url);
+      setResults(apiResults.subreddits);
     } catch (error) {
       if (error instanceof AbortError) {
         return;

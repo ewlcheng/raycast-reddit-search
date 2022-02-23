@@ -1,12 +1,10 @@
-import { ActionPanel, Action, Icon, List, showToast, Toast } from "@raycast/api";
+import { List, showToast, Toast } from "@raycast/api";
 import { AbortError } from "node-fetch";
 import { useRef, useState } from "react";
-import RedditResultItem from "./RedditResultItem";
-import PostActionPanel from "./PostActionPanel";
-import { createSearchUrl } from "./UrlBuilder";
+import RedditResultItem from "./RedditApi/RedditResultItem";
 import Sort from "./Sort";
-import redditSort from "./RedditSort";
-import { searchAll } from "./Api";
+import { searchAll } from "./RedditApi/Api";
+import PostList from "./PostList";
 
 export default function FilterBySubredditPostList({
   subreddit,
@@ -36,11 +34,10 @@ export default function FilterBySubredditPostList({
       return;
     }
 
-    setSearchRedditUrl(createSearchUrl(subreddit, false, query, "", 0, sort?.sortValue));
-
     try {
       const apiResults = await searchAll(subreddit, query, sort?.sortValue ?? "", abortControllerRef.current);
-      setResults(apiResults);
+      setSearchRedditUrl(apiResults.url);
+      setResults(apiResults.items);
     } catch (error) {
       if (error instanceof AbortError) {
         return;
@@ -64,87 +61,12 @@ export default function FilterBySubredditPostList({
       throttle
       searchBarPlaceholder={`Search r/${subredditName}...`}
     >
-      {results.length > 0 && (
-        <>
-          <List.Section title={sort ? `Results (sorted by ${sort})` : "Results"}>
-            {results.map((x) => (
-              <List.Item
-                key={x.id}
-                icon={
-                  x.thumbnail && (x.thumbnail.startsWith("http:") || x.thumbnail.startsWith("https:"))
-                    ? { source: x.thumbnail }
-                    : Icon.Text
-                }
-                title={x.title}
-                accessoryTitle={`Posted ${x.created} r/${x.subreddit}`}
-                actions={<PostActionPanel data={x} />}
-              />
-            ))}
-          </List.Section>
-          <List.Section title="Didn't find what you're looking for?">
-            <List.Item
-              key="searchOnReddit"
-              icon={Icon.MagnifyingGlass}
-              title="Show all results on Reddit..."
-              actions={
-                <ActionPanel>
-                  <Action.OpenInBrowser url={searchRedditUrl} icon={Icon.Globe} />
-                </ActionPanel>
-              }
-            />
-            <List.Item
-              key="sortByRelevance"
-              icon={Icon.MagnifyingGlass}
-              title="Sort by relevance"
-              actions={
-                <ActionPanel>
-                  <Action title="Sort by relevance" onAction={() => doSearch(queryRef.current, redditSort.relevance)} />
-                </ActionPanel>
-              }
-            />
-            <List.Item
-              key="sortByHot"
-              icon={Icon.MagnifyingGlass}
-              title="Sort by hotest"
-              actions={
-                <ActionPanel>
-                  <Action title="Sort by hotest" onAction={() => doSearch(queryRef.current, redditSort.hot)} />
-                </ActionPanel>
-              }
-            />
-            <List.Item
-              key="sortByTop"
-              icon={Icon.MagnifyingGlass}
-              title="Sort by top"
-              actions={
-                <ActionPanel>
-                  <Action title="Sort by top" onAction={() => doSearch(queryRef.current, redditSort.top)} />
-                </ActionPanel>
-              }
-            />
-            <List.Item
-              key="sortByLatest"
-              icon={Icon.MagnifyingGlass}
-              title="Sort by latest"
-              actions={
-                <ActionPanel>
-                  <Action title="Sort by latest" onAction={() => doSearch(queryRef.current, redditSort.latest)} />
-                </ActionPanel>
-              }
-            />
-            <List.Item
-              key="sortByComments"
-              icon={Icon.MagnifyingGlass}
-              title="Sort by comments"
-              actions={
-                <ActionPanel>
-                  <Action title="Sort by comments" onAction={() => doSearch(queryRef.current, redditSort.comments)} />
-                </ActionPanel>
-              }
-            />
-          </List.Section>
-        </>
-      )}
+      <PostList
+        posts={results}
+        sort={sort}
+        searchRedditUrl={searchRedditUrl}
+        doSearch={(sort: Sort) => doSearch(queryRef.current, sort)}
+      />
     </List>
   );
 }

@@ -1,10 +1,8 @@
 import useFavoriteSubreddits from "./FavoriteSubreddits";
-import PostList from "./PostList";
+import Home from "./Home";
 
 export default function Command() {
   const [favorites, addSubreddit, removeSubreddit] = useFavoriteSubreddits();
 
-  return (
-    <PostList favorites={favorites} addFavoriteSubreddit={addSubreddit} removeFavoriteSubreddit={removeSubreddit} />
-  );
+  return <Home favorites={favorites} addFavoriteSubreddit={addSubreddit} removeFavoriteSubreddit={removeSubreddit} />;
 }
