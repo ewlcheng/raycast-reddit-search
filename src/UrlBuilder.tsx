@@ -8,16 +8,8 @@ const joinUrl = (part1: string, part2: string) => {
 
 export const joinWithBaseUrl = (part: string) => joinUrl(redditUrl, part);
 
-export const createSearchUrl = (
-  base = "",
-  subreddit = "",
-  json = false,
-  query = "",
-  type = "",
-  limit = 0,
-  sort = ""
-) => {
-  let url = base ? base : redditUrl;
+export const createSearchUrl = (subreddit = "", json = false, query = "", type = "", limit = 0, sort = "") => {
+  let url = redditUrl;
 
   if (subreddit) {
     url = joinUrl(url, subreddit);

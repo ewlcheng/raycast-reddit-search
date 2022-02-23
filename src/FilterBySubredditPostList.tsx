@@ -35,10 +35,10 @@ export default function FilterBySubredditPostList({
       return;
     }
 
-    setSearchRedditUrl(createSearchUrl("", subreddit, false, query, "", 0, sort?.sortValue));
+    setSearchRedditUrl(createSearchUrl(subreddit, false, query, "", 0, sort?.sortValue));
 
     try {
-      const response = await fetch(createSearchUrl("", subreddit, true, query, "", 10, sort?.sortValue), {
+      const response = await fetch(createSearchUrl(subreddit, true, query, "", 10, sort?.sortValue), {
         method: "get",
         signal: abortControllerRef.current.signal,
       });

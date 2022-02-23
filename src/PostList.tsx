@@ -5,17 +5,23 @@ import RedditResultItem from "./RedditResultItem";
 import PostActionPanel from "./PostActionPanel";
 import SubredditList from "./SubredditList";
 import { joinWithBaseUrl, createSearchUrl } from "./UrlBuilder";
-import { getFavoriteSubreddits, removeSubreddit } from "./FavoriteSubreddits";
 import FilterBySubredditPostList from "./FilterBySubredditPostList";
 import Sort from "./Sort";
 import redditSort from "./RedditSort";
 
-export default function PostList() {
+export default function PostList({
+  favorites,
+  addFavoriteSubreddit,
+  removeFavoriteSubreddit,
+}: {
+  favorites: string[];
+  addFavoriteSubreddit: (subreddit: string) => void;
+  removeFavoriteSubreddit: (subreddit: string) => void;
+}) {
   const [results, setResults] = useState<RedditResultItem[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchRedditUrl, setSearchRedditUrl] = useState("");
   const [showSearchTypes, setShowSearchTypes] = useState(true);
-  const [favorites, setFavorites] = useState<string[]>([]);
   const [sort, setSort] = useState("");
   const abortControllerRef = useRef<AbortController | null>(null);
   const queryRef = useRef<string>("");
@@ -36,10 +42,10 @@ export default function PostList() {
     }
 
     setShowSearchTypes(false);
-    setSearchRedditUrl(createSearchUrl("", "", false, query, "", 0, sort?.sortValue));
+    setSearchRedditUrl(createSearchUrl("", false, query, "", 0, sort?.sortValue));
 
     try {
-      const response = await fetch(createSearchUrl("", "", true, query, "", 10, sort?.sortValue), {
+      const response = await fetch(createSearchUrl("", true, query, "", 10, sort?.sortValue), {
         method: "get",
         signal: abortControllerRef.current.signal,
       });
@@ -111,13 +117,8 @@ export default function PostList() {
   };
 
   useEffect(() => {
-    const getFavorites = async () => {
-      const favorites = await getFavoriteSubreddits();
-      setFavorites(favorites);
-    };
-
-    getFavorites();
-  }, []);
+    console.log(favorites);
+  }, [favorites]);
 
   return (
     <List isLoading={searching} onSearchTextChange={doSearch} throttle searchBarPlaceholder="Search Reddit...">
@@ -130,7 +131,16 @@ export default function PostList() {
               title="Search subreddits..."
               actions={
                 <ActionPanel>
-                  <Action.Push title="Search subreddits" target={<SubredditList />} />
+                  <Action.Push
+                    title="Search subreddits"
+                    target={
+                      <SubredditList
+                        favorites={favorites}
+                        addFavoriteSubreddit={addFavoriteSubreddit}
+                        removeFavoriteSubreddit={removeFavoriteSubreddit}
+                      />
+                    }
+                  />
                 </ActionPanel>
               }
             />
@@ -151,9 +161,7 @@ export default function PostList() {
                       title="Remove from Favorites"
                       icon={Icon.Trash}
                       onAction={async () => {
-                        await removeSubreddit(x);
-                        const favorites = await getFavoriteSubreddits();
-                        setFavorites(favorites);
+                        await removeFavoriteSubreddit(x);
                       }}
                     />
                   </ActionPanel>

@@ -1,16 +1,22 @@
 import { ActionPanel, Action, Icon, List, showToast, Toast } from "@raycast/api";
 import fetch, { AbortError } from "node-fetch";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import RedditResultSubreddit from "./RedditResultSubreddit";
 import FilterBySubredditPostList from "./FilterBySubredditPostList";
 import { joinWithBaseUrl, createSearchUrl } from "./UrlBuilder";
-import { addSubreddit, getFavoriteSubreddits, removeSubreddit } from "./FavoriteSubreddits";
 
-export default function SubredditPostList() {
+export default function SubredditPostList({
+  favorites,
+  addFavoriteSubreddit,
+  removeFavoriteSubreddit,
+}: {
+  favorites: string[];
+  addFavoriteSubreddit: (subreddit: string) => void;
+  removeFavoriteSubreddit: (subreddit: string) => void;
+}) {
   const [results, setResults] = useState<RedditResultSubreddit[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchRedditUrl, setSearchRedditUrl] = useState("");
-  const [favorites, setFavorites] = useState<string[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
   const queryRef = useRef<string>("");
 
@@ -27,10 +33,10 @@ export default function SubredditPostList() {
       return;
     }
 
-    setSearchRedditUrl(createSearchUrl("", "", false, query, "sr", 0));
+    setSearchRedditUrl(createSearchUrl("", false, query, "sr", 0));
 
     try {
-      const response = await fetch(createSearchUrl("", "", true, query, "sr", 10), {
+      const response = await fetch(createSearchUrl("", true, query, "sr", 10), {
         method: "get",
         signal: abortControllerRef.current.signal,
       });
@@ -54,8 +60,6 @@ export default function SubredditPostList() {
           ];
         };
       };
-
-      const favorites = await getFavoriteSubreddits();
 
       const reddits =
         json.data && json.data.children
@@ -119,16 +123,13 @@ export default function SubredditPostList() {
                   title="Favorite"
                   icon={Icon.Star}
                   onAction={async () => {
-                    await addSubreddit(x.subreddit);
-                    // const favorites = await getFavoriteSubreddits();
-                    // setFavorites(favorites);
+                    await addFavoriteSubreddit(x.subreddit);
                     const index = results.findIndex((y) => y.id === x.id);
                     setResults([
                       ...results.slice(0, index),
                       { ...results[index], isFavorite: !results[index].isFavorite },
                       ...results.slice(index + 1),
                     ]);
-                    // await doSearch(queryRef.current);
                   }}
                 />
               )}
@@ -137,16 +138,13 @@ export default function SubredditPostList() {
                   title="Remove from Favorites"
                   icon={Icon.Trash}
                   onAction={async () => {
-                    await removeSubreddit(x.subreddit);
-                    // const favorites = await getFavoriteSubreddits();
-                    // setFavorites(favorites);
+                    await removeFavoriteSubreddit(x.subreddit);
                     const index = results.findIndex((y) => y.id === x.id);
                     setResults([
                       ...results.slice(0, index),
                       { ...results[index], isFavorite: !results[index].isFavorite },
                       ...results.slice(index + 1),
                     ]);
-                    // await doSearch(queryRef.current);
                   }}
                 />
               )}
