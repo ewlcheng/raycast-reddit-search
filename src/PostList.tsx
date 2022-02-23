@@ -1,22 +1,21 @@
 import { ActionPanel, Action, Icon, List, showToast, Toast } from "@raycast/api";
 import fetch, { AbortError } from "node-fetch";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import RedditResultItem from "./RedditResultItem";
 import PostActionPanel from "./PostActionPanel";
-import { createSearchUrl, joinWithBaseUrl } from "./UrlBuilder";
+import SubredditList from "./SubredditList";
+import { joinWithBaseUrl, createSearchUrl } from "./UrlBuilder";
+import { getFavoriteSubreddits, removeSubreddit } from "./FavoriteSubreddits";
+import FilterBySubredditPostList from "./FilterBySubredditPostList";
 import Sort from "./Sort";
 import redditSort from "./RedditSort";
 
-export default function FilterBySubredditPostList({
-  subreddit,
-  subredditName,
-}: {
-  subreddit: string;
-  subredditName: string;
-}) {
+export default function PostList() {
   const [results, setResults] = useState<RedditResultItem[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchRedditUrl, setSearchRedditUrl] = useState("");
+  const [showSearchTypes, setShowSearchTypes] = useState(true);
+  const [favorites, setFavorites] = useState<string[]>([]);
   const [sort, setSort] = useState("");
   const abortControllerRef = useRef<AbortController | null>(null);
   const queryRef = useRef<string>("");
@@ -32,13 +31,15 @@ export default function FilterBySubredditPostList({
 
     if (!query) {
       setSearching(false);
+      setShowSearchTypes(true);
       return;
     }
 
-    setSearchRedditUrl(createSearchUrl("", subreddit, false, query, "", 0, sort?.sortValue));
+    setShowSearchTypes(false);
+    setSearchRedditUrl(createSearchUrl("", "", false, query, "", 0, sort?.sortValue));
 
     try {
-      const response = await fetch(createSearchUrl("", subreddit, true, query, "", 10, sort?.sortValue), {
+      const response = await fetch(createSearchUrl("", "", true, query, "", 10, sort?.sortValue), {
         method: "get",
         signal: abortControllerRef.current.signal,
       });
@@ -109,13 +110,59 @@ export default function FilterBySubredditPostList({
     }
   };
 
+  useEffect(() => {
+    const getFavorites = async () => {
+      const favorites = await getFavoriteSubreddits();
+      setFavorites(favorites);
+    };
+
+    getFavorites();
+  }, []);
+
   return (
-    <List
-      isLoading={searching}
-      onSearchTextChange={doSearch}
-      throttle
-      searchBarPlaceholder={`Search r/${subredditName}...`}
-    >
+    <List isLoading={searching} onSearchTextChange={doSearch} throttle searchBarPlaceholder="Search Reddit...">
+      {showSearchTypes && (
+        <>
+          <List.Section title="More ways to search">
+            <List.Item
+              key="searchOnRedditForSubreddits"
+              icon={Icon.MagnifyingGlass}
+              title="Search subreddits..."
+              actions={
+                <ActionPanel>
+                  <Action.Push title="Search subreddits" target={<SubredditList />} />
+                </ActionPanel>
+              }
+            />
+          </List.Section>
+          <List.Section title="Favorite subreddits">
+            {favorites.map((x) => (
+              <List.Item
+                key={x}
+                title={x}
+                actions={
+                  <ActionPanel>
+                    <Action.Push
+                      title="Search subreddit"
+                      target={<FilterBySubredditPostList subreddit={x} subredditName={x.substring(3, x.length - 1)} />}
+                    />
+                    <Action.OpenInBrowser url={joinWithBaseUrl(x)} icon={Icon.Globe} />
+                    <Action
+                      title="Remove from Favorites"
+                      icon={Icon.Trash}
+                      onAction={async () => {
+                        await removeSubreddit(x);
+                        const favorites = await getFavoriteSubreddits();
+                        setFavorites(favorites);
+                      }}
+                    />
+                  </ActionPanel>
+                }
+              />
+            ))}
+          </List.Section>
+        </>
+      )}
       {results.length > 0 && (
         <>
           <List.Section title={sort ? `Results (sorted by ${sort})` : "Results"}>

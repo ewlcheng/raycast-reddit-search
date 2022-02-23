@@ -1,5 +1,5 @@
-import RedditPostList from "./RedditPostList";
+import PostList from "./PostList";
 
 export default function Command() {
-  return <RedditPostList />;
+  return <PostList />;
 }
