@@ -1,5 +1,5 @@
 import { ActionPanel, Action, Icon, Detail } from "@raycast/api";
-import RedditResultItem from "./RedditResultItem";
+import RedditResultItem from "./RedditApi/RedditResultItem";
 
 export default function PostActionPanel({ data }: { data: RedditResultItem }) {
   if (data.description) {

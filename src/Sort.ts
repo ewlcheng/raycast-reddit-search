@@ -1,5 +1,4 @@
 export default interface Sort {
-    sortValue: string;
-    name: string;
+  sortValue: string;
+  name: string;
 }
-  
