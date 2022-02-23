@@ -1,11 +1,12 @@
 import { ActionPanel, Action, Icon, List, showToast, Toast } from "@raycast/api";
-import fetch, { AbortError } from "node-fetch";
+import { AbortError } from "node-fetch";
 import { useRef, useState } from "react";
 import RedditResultItem from "./RedditResultItem";
 import PostActionPanel from "./PostActionPanel";
-import { createSearchUrl, joinWithBaseUrl } from "./UrlBuilder";
+import { createSearchUrl } from "./UrlBuilder";
 import Sort from "./Sort";
 import redditSort from "./RedditSort";
+import { searchAll } from "./Api";
 
 export default function FilterBySubredditPostList({
   subreddit,
@@ -38,61 +39,8 @@ export default function FilterBySubredditPostList({
     setSearchRedditUrl(createSearchUrl(subreddit, false, query, "", 0, sort?.sortValue));
 
     try {
-      const response = await fetch(createSearchUrl(subreddit, true, query, "", 10, sort?.sortValue), {
-        method: "get",
-        signal: abortControllerRef.current.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error(response.statusText);
-      }
-
-      const json = (await response.json()) as {
-        data: {
-          children: [
-            {
-              data: {
-                id: string;
-                title: string;
-                url: string;
-                permalink: string;
-                selftext?: string;
-                created_utc: number;
-                thumbnail: string;
-                subreddit: string;
-                url_overridden_by_dest?: string;
-                is_video: boolean;
-              };
-            }
-          ];
-        };
-      };
-
-      const reddits =
-        json.data && json.data.children
-          ? json.data.children.map(
-              (x) =>
-                ({
-                  id: x.data.id,
-                  title: x.data.title,
-                  url: joinWithBaseUrl(x.data.permalink),
-                  description: x.data.selftext,
-                  imageUrl:
-                    x.data.is_video ||
-                    (x.data.url_overridden_by_dest &&
-                      !x.data.url_overridden_by_dest.endsWith(".jpg") &&
-                      !x.data.url_overridden_by_dest.endsWith(".gif") &&
-                      !x.data.url_overridden_by_dest.endsWith(".png"))
-                      ? ""
-                      : x.data.url_overridden_by_dest,
-                  created: new Date(x.data.created_utc * 1000).toLocaleString(),
-                  thumbnail: x.data.thumbnail,
-                  subreddit: x.data.subreddit,
-                } as RedditResultItem)
-            )
-          : [];
-
-      setResults(reddits);
+      const apiResults = await searchAll(subreddit, query, sort?.sortValue ?? "", abortControllerRef.current);
+      setResults(apiResults);
     } catch (error) {
       if (error instanceof AbortError) {
         return;

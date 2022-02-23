@@ -43,7 +43,6 @@ export const createSearchUrl = (subreddit = "", json = false, query = "", type =
     url = url + "?" + params.toString();
   }
 
-  console.log(url);
   return url;
 };
 

@@ -1,9 +1,10 @@
 import { ActionPanel, Action, Icon, List, showToast, Toast } from "@raycast/api";
-import fetch, { AbortError } from "node-fetch";
+import { AbortError } from "node-fetch";
 import { useRef, useState } from "react";
 import RedditResultSubreddit from "./RedditResultSubreddit";
 import FilterBySubredditPostList from "./FilterBySubredditPostList";
-import { joinWithBaseUrl, createSearchUrl } from "./UrlBuilder";
+import { createSearchUrl } from "./UrlBuilder";
+import { searchSubreddits } from "./Api";
 
 export default function SubredditPostList({
   favorites,
@@ -36,48 +37,13 @@ export default function SubredditPostList({
     setSearchRedditUrl(createSearchUrl("", false, query, "sr", 0));
 
     try {
-      const response = await fetch(createSearchUrl("", true, query, "sr", 10), {
-        method: "get",
-        signal: abortControllerRef.current.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error(response.statusText);
+      const apiResults = await searchSubreddits(query, abortControllerRef.current);
+      for (let i = 0; i < apiResults.length; i++) {
+        const apiResult = apiResults[i];
+        apiResult.isFavorite = favorites.some((y) => y === apiResult.subreddit);
       }
 
-      const json = (await response.json()) as {
-        data: {
-          children: [
-            {
-              data: {
-                id: string;
-                title: string;
-                url: string;
-                created_utc: number;
-                display_name_prefixed: string;
-              };
-            }
-          ];
-        };
-      };
-
-      const reddits =
-        json.data && json.data.children
-          ? json.data.children.map(
-              (x) =>
-                ({
-                  id: x.data.id,
-                  title: x.data.title,
-                  url: joinWithBaseUrl(x.data.url),
-                  subreddit: x.data.url,
-                  created: new Date(x.data.created_utc * 1000).toLocaleString(),
-                  subredditName: x.data.display_name_prefixed.substring(2),
-                  isFavorite: favorites.some((y) => y === x.data.url),
-                } as RedditResultSubreddit)
-            )
-          : [];
-
-      setResults(reddits);
+      setResults(apiResults);
     } catch (error) {
       if (error instanceof AbortError) {
         return;
@@ -94,15 +60,6 @@ export default function SubredditPostList({
     }
   };
 
-  // useEffect(() => {
-  //   const getFavorites = async () => {
-  //     const favorites = await getFavoriteSubreddits();
-  //     setFavorites(favorites);
-  //   };
-
-  //   getFavorites();
-  // }, []);
-
   return (
     <List isLoading={searching} onSearchTextChange={doSearch} throttle searchBarPlaceholder="Search Subreddits...">
       {results.map((x) => (
@@ -110,7 +67,7 @@ export default function SubredditPostList({
           key={x.id}
           icon={Icon.Text}
           title={x.title}
-          accessoryTitle={`Posted ${x.created} r/${x.subredditName}`}
+          accessoryTitle={`Posted ${x.created} r/${x.subredditName}${x.isFavorite ? " ⭐" : ""}`}
           actions={
             <ActionPanel>
               <Action.Push
