@@ -8,7 +8,7 @@ export default function SortListItem({
 }: {
   sort: Sort;
   currentSort: Sort;
-  doSearch: (sort: Sort) => void;
+  doSearch: (sort: Sort, after?: string) => void;
 }) {
   return (
     <List.Item

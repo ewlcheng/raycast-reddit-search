@@ -9,9 +9,10 @@ export const searchAll = async (
   query: string,
   limit: number,
   sort: string,
+  after: string,
   abort?: AbortController
 ) => {
-  const response = await fetch(createSearchUrl(subreddit, true, query, "", limit, sort), {
+  const response = await fetch(createSearchUrl(subreddit, true, query, "", limit, sort, after), {
     method: "get",
     signal: abort?.signal,
   });
@@ -24,6 +25,7 @@ export const searchAll = async (
     data: {
       children: [
         {
+          kind: string;
           data: {
             id: string;
             title: string;
@@ -64,14 +66,15 @@ export const searchAll = async (
                 created: new Date(x.data.created_utc * 1000).toLocaleString(),
                 thumbnail: x.data.thumbnail,
                 subreddit: x.data.subreddit,
+                afterId: `${x.kind}_${x.data.id}`,
               } as RedditResultItem)
           )
         : [],
   } as RedditResult;
 };
 
-export const searchSubreddits = async (query: string, limit: number, abort?: AbortController) => {
-  const response = await fetch(createSearchUrl("", true, query, "sr", limit), {
+export const searchSubreddits = async (query: string, limit: number, after: string, abort?: AbortController) => {
+  const response = await fetch(createSearchUrl("", true, query, "sr", limit, "", after), {
     method: "get",
     signal: abort?.signal,
   });
@@ -84,6 +87,7 @@ export const searchSubreddits = async (query: string, limit: number, abort?: Abo
     data: {
       children: [
         {
+          kind: string;
           data: {
             id: string;
             title: string;
@@ -109,6 +113,7 @@ export const searchSubreddits = async (query: string, limit: number, abort?: Abo
                 subreddit: x.data.url,
                 created: new Date(x.data.created_utc * 1000).toLocaleString(),
                 subredditName: x.data.display_name_prefixed.substring(2),
+                afterId: `${x.kind}_${x.data.id}`,
               } as RedditResultSubreddit)
           )
         : [],

@@ -1,12 +1,11 @@
 import { List, showToast, Toast } from "@raycast/api";
 import { AbortError } from "node-fetch";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import RedditResultItem from "./RedditApi/RedditResultItem";
 import Sort from "./Sort";
 import RedditSort from "./RedditSort";
 import { searchAll } from "./RedditApi/Api";
 import PostList from "./PostList";
-import Preferences from "./Preferences";
 import getPreferences from "./Preferences";
 
 export default function FilterBySubredditPostList({
@@ -23,12 +22,15 @@ export default function FilterBySubredditPostList({
   const abortControllerRef = useRef<AbortController | null>(null);
   const queryRef = useRef<string>("");
 
-  const doSearch = async (query: string, sort = RedditSort.relevance) => {
+  const doSearch = async (query: string, sort = RedditSort.relevance, after = "") => {
     abortControllerRef.current?.abort();
     abortControllerRef.current = new AbortController();
 
     setSearching(true);
-    setResults([]);
+    if (!after) {
+      setResults([]);
+    }
+
     setSort(sort);
     queryRef.current = query;
 
@@ -44,10 +46,16 @@ export default function FilterBySubredditPostList({
         query,
         preferences.resultLimit,
         sort?.sortValue ?? "",
+        after,
         abortControllerRef.current
       );
       setSearchRedditUrl(apiResults.url);
-      setResults(apiResults.items);
+
+      if (after) {
+        setResults([...results, ...apiResults.items]);
+      } else {
+        setResults(apiResults.items);
+      }
     } catch (error) {
       if (error instanceof AbortError) {
         return;
@@ -64,6 +72,12 @@ export default function FilterBySubredditPostList({
     }
   };
 
+  useEffect(() => {
+    return () => {
+      abortControllerRef?.current?.abort();
+    };
+  }, []);
+
   return (
     <List
       isLoading={searching}
@@ -75,7 +89,7 @@ export default function FilterBySubredditPostList({
         posts={results}
         sort={sort}
         searchRedditUrl={searchRedditUrl}
-        doSearch={(sort: Sort) => doSearch(queryRef.current, sort)}
+        doSearch={(sort: Sort, after = "") => doSearch(queryRef.current, sort, after)}
       />
     </List>
   );

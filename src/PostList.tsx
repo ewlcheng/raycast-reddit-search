@@ -14,7 +14,7 @@ export default function PostList({
   posts: RedditResultItem[];
   sort: Sort;
   searchRedditUrl: string;
-  doSearch: (sort: Sort) => void;
+  doSearch: (sort: Sort, after?: string) => void;
 }) {
   if (!posts.length) {
     return null;
@@ -36,11 +36,28 @@ export default function PostList({
             actions={<PostActionPanel data={x} />}
           />
         ))}
+        <List.Item
+          key="showMore"
+          icon={Icon.MagnifyingGlass}
+          title="Show more..."
+          actions={
+            <ActionPanel>
+              <Action title="Show more..." onAction={() => doSearch(sort, posts[posts.length - 1].afterId)} />
+            </ActionPanel>
+          }
+        />
+      </List.Section>
+      <List.Section title="Sort">
+        <SortListItem sort={redditSort.relevance} currentSort={sort} doSearch={doSearch} />
+        <SortListItem sort={redditSort.hot} currentSort={sort} doSearch={doSearch} />
+        <SortListItem sort={redditSort.top} currentSort={sort} doSearch={doSearch} />
+        <SortListItem sort={redditSort.latest} currentSort={sort} doSearch={doSearch} />
+        <SortListItem sort={redditSort.comments} currentSort={sort} doSearch={doSearch} />
       </List.Section>
       <List.Section title="Didn't find what you're looking for?">
         <List.Item
           key="searchOnReddit"
-          icon={Icon.MagnifyingGlass}
+          icon={Icon.Globe}
           title="Show all results on Reddit..."
           actions={
             <ActionPanel>
@@ -48,11 +65,6 @@ export default function PostList({
             </ActionPanel>
           }
         />
-        <SortListItem sort={redditSort.relevance} currentSort={sort} doSearch={doSearch} />
-        <SortListItem sort={redditSort.hot} currentSort={sort} doSearch={doSearch} />
-        <SortListItem sort={redditSort.top} currentSort={sort} doSearch={doSearch} />
-        <SortListItem sort={redditSort.latest} currentSort={sort} doSearch={doSearch} />
-        <SortListItem sort={redditSort.comments} currentSort={sort} doSearch={doSearch} />
       </List.Section>
     </>
   );

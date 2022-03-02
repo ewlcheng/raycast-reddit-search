@@ -1,6 +1,6 @@
 import { ActionPanel, Action, Icon, List, showToast, Toast } from "@raycast/api";
 import { AbortError } from "node-fetch";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { searchAll } from "./RedditApi/Api";
 import RedditResultItem from "./RedditApi/RedditResultItem";
 import { joinWithBaseUrl } from "./RedditApi/UrlBuilder";
@@ -24,27 +24,26 @@ export default function Home({
   const [results, setResults] = useState<RedditResultItem[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchRedditUrl, setSearchRedditUrl] = useState("");
-  const [showSearchTypes, setShowSearchTypes] = useState(true);
   const [sort, setSort] = useState(RedditSort.relevance);
   const abortControllerRef = useRef<AbortController | null>(null);
   const queryRef = useRef<string>("");
 
-  const doSearch = async (query: string, sort = RedditSort.relevance) => {
+  const doSearch = async (query: string, sort = RedditSort.relevance, after = "") => {
     abortControllerRef.current?.abort();
     abortControllerRef.current = new AbortController();
 
     setSearching(true);
-    setResults([]);
+    if (!after) {
+      setResults([]);
+    }
+
     setSort(sort);
     queryRef.current = query;
 
     if (!query) {
       setSearching(false);
-      setShowSearchTypes(true);
       return;
     }
-
-    setShowSearchTypes(false);
 
     try {
       const preferences = getPreferences();
@@ -53,10 +52,16 @@ export default function Home({
         query,
         preferences.resultLimit,
         sort?.sortValue ?? "",
+        after,
         abortControllerRef.current
       );
       setSearchRedditUrl(apiResults.url);
-      setResults(apiResults.items);
+
+      if (after) {
+        setResults([...results, ...apiResults.items]);
+      } else {
+        setResults(apiResults.items);
+      }
     } catch (error) {
       if (error instanceof AbortError) {
         return;
@@ -73,9 +78,15 @@ export default function Home({
     }
   };
 
+  useEffect(() => {
+    return () => {
+      abortControllerRef?.current?.abort();
+    };
+  }, []);
+
   return (
     <List isLoading={searching} onSearchTextChange={doSearch} throttle searchBarPlaceholder="Search Reddit...">
-      {showSearchTypes && (
+      {!queryRef.current && (
         <>
           <List.Section title="More ways to search">
             <List.Item
@@ -128,7 +139,7 @@ export default function Home({
         posts={results}
         sort={sort}
         searchRedditUrl={searchRedditUrl}
-        doSearch={(sort: Sort) => doSearch(queryRef.current, sort)}
+        doSearch={(sort: Sort, after = "") => doSearch(queryRef.current, sort, after)}
       />
     </List>
   );

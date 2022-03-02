@@ -8,7 +8,15 @@ const joinUrl = (part1: string, part2: string) => {
 
 export const joinWithBaseUrl = (part: string) => joinUrl(redditUrl, part);
 
-export const createSearchUrl = (subreddit = "", json = false, query = "", type = "", limit = 0, sort = "") => {
+export const createSearchUrl = (
+  subreddit = "",
+  json = false,
+  query = "",
+  type = "",
+  limit = 0,
+  sort = "",
+  after = ""
+) => {
   let url = redditUrl;
 
   if (subreddit) {
@@ -40,9 +48,14 @@ export const createSearchUrl = (subreddit = "", json = false, query = "", type =
       params.append("sort", sort);
     }
 
+    if (after) {
+      params.append("after", after);
+    }
+
     url = url + "?" + params.toString();
   }
 
+  console.log(url);
   return url;
 };
 
