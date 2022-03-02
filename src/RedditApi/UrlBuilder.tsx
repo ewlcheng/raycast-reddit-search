@@ -55,7 +55,6 @@ export const createSearchUrl = (
     url = url + "?" + params.toString();
   }
 
-  console.log(url);
   return url;
 };
 
