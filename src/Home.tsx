@@ -7,8 +7,10 @@ import { joinWithBaseUrl } from "./RedditApi/UrlBuilder";
 import SubredditList from "./SubredditList";
 import FilterBySubredditPostList from "./FilterBySubredditPostList";
 import Sort from "./Sort";
+import RedditSort from "./RedditSort";
 
 import PostList from "./PostList";
+import getPreferences from "./Preferences";
 
 export default function Home({
   favorites,
@@ -23,17 +25,17 @@ export default function Home({
   const [searching, setSearching] = useState(false);
   const [searchRedditUrl, setSearchRedditUrl] = useState("");
   const [showSearchTypes, setShowSearchTypes] = useState(true);
-  const [sort, setSort] = useState("");
+  const [sort, setSort] = useState(RedditSort.relevance);
   const abortControllerRef = useRef<AbortController | null>(null);
   const queryRef = useRef<string>("");
 
-  const doSearch = async (query: string, sort?: Sort) => {
+  const doSearch = async (query: string, sort = RedditSort.relevance) => {
     abortControllerRef.current?.abort();
     abortControllerRef.current = new AbortController();
 
     setSearching(true);
     setResults([]);
-    setSort(sort?.name ?? "");
+    setSort(sort);
     queryRef.current = query;
 
     if (!query) {
@@ -45,7 +47,14 @@ export default function Home({
     setShowSearchTypes(false);
 
     try {
-      const apiResults = await searchAll("", query, sort?.sortValue ?? "", abortControllerRef.current);
+      const preferences = getPreferences();
+      const apiResults = await searchAll(
+        "",
+        query,
+        preferences.resultLimit,
+        sort?.sortValue ?? "",
+        abortControllerRef.current
+      );
       setSearchRedditUrl(apiResults.url);
       setResults(apiResults.items);
     } catch (error) {
@@ -72,7 +81,7 @@ export default function Home({
             <List.Item
               key="searchOnRedditForSubreddits"
               icon={Icon.MagnifyingGlass}
-              title="Search subreddits..."
+              title="Search Subreddits..."
               actions={
                 <ActionPanel>
                   <Action.Push

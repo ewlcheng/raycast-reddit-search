@@ -3,6 +3,7 @@ import RedditResultItem from "./RedditApi/RedditResultItem";
 import PostActionPanel from "./PostActionPanel";
 import Sort from "./Sort";
 import redditSort from "./RedditSort";
+import SortListItem from "./SortListItem";
 
 export default function PostList({
   posts,
@@ -11,7 +12,7 @@ export default function PostList({
   doSearch,
 }: {
   posts: RedditResultItem[];
-  sort: string;
+  sort: Sort;
   searchRedditUrl: string;
   doSearch: (sort: Sort) => void;
 }) {
@@ -21,7 +22,7 @@ export default function PostList({
 
   return (
     <>
-      <List.Section title={sort ? `Results (sorted by ${sort})` : "Results"}>
+      <List.Section title={sort ? `Results (Sorted by ${sort.name})` : "Results"}>
         {posts.map((x) => (
           <List.Item
             key={x.id}
@@ -47,56 +48,11 @@ export default function PostList({
             </ActionPanel>
           }
         />
-        <List.Item
-          key="sortByRelevance"
-          icon={Icon.MagnifyingGlass}
-          title="Sort by relevance"
-          actions={
-            <ActionPanel>
-              <Action title="Sort by relevance" onAction={() => doSearch(redditSort.relevance)} />
-            </ActionPanel>
-          }
-        />
-        <List.Item
-          key="sortByHot"
-          icon={Icon.MagnifyingGlass}
-          title="Sort by hot"
-          actions={
-            <ActionPanel>
-              <Action title="Sort by hot" onAction={() => doSearch(redditSort.hot)} />
-            </ActionPanel>
-          }
-        />
-        <List.Item
-          key="sortByTop"
-          icon={Icon.MagnifyingGlass}
-          title="Sort by top"
-          actions={
-            <ActionPanel>
-              <Action title="Sort by top" onAction={() => doSearch(redditSort.top)} />
-            </ActionPanel>
-          }
-        />
-        <List.Item
-          key="sortByLatest"
-          icon={Icon.MagnifyingGlass}
-          title="Sort by latest"
-          actions={
-            <ActionPanel>
-              <Action title="Sort by latest" onAction={() => doSearch(redditSort.latest)} />
-            </ActionPanel>
-          }
-        />
-        <List.Item
-          key="sortByComments"
-          icon={Icon.MagnifyingGlass}
-          title="Sort by comments"
-          actions={
-            <ActionPanel>
-              <Action title="Sort by comments" onAction={() => doSearch(redditSort.comments)} />
-            </ActionPanel>
-          }
-        />
+        <SortListItem sort={redditSort.relevance} currentSort={sort} doSearch={doSearch} />
+        <SortListItem sort={redditSort.hot} currentSort={sort} doSearch={doSearch} />
+        <SortListItem sort={redditSort.top} currentSort={sort} doSearch={doSearch} />
+        <SortListItem sort={redditSort.latest} currentSort={sort} doSearch={doSearch} />
+        <SortListItem sort={redditSort.comments} currentSort={sort} doSearch={doSearch} />
       </List.Section>
     </>
   );

@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { searchSubreddits } from "./RedditApi/Api";
 import RedditResultSubreddit from "./RedditApi/RedditResultSubreddit";
 import FilterBySubredditPostList from "./FilterBySubredditPostList";
+import getPreferences from "./Preferences";
 
 export default function SubredditPostList({
   favorites,
@@ -34,7 +35,8 @@ export default function SubredditPostList({
     }
 
     try {
-      const apiResults = await searchSubreddits(query, abortControllerRef.current);
+      const preferences = getPreferences();
+      const apiResults = await searchSubreddits(query, preferences.resultLimit, abortControllerRef.current);
       for (let i = 0; i < apiResults.subreddits.length; i++) {
         const apiResult = apiResults.subreddits[i];
         apiResult.isFavorite = favorites.some((y) => y === apiResult.subreddit);
@@ -76,7 +78,7 @@ export default function SubredditPostList({
                 <Action.OpenInBrowser url={x.url} icon={Icon.Globe} />
                 {!x.isFavorite && (
                   <Action
-                    title="Favorite"
+                    title="Add to Favorites"
                     icon={Icon.Star}
                     onAction={async () => {
                       await addFavoriteSubreddit(x.subreddit);

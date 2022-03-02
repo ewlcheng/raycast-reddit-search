@@ -4,8 +4,14 @@ import RedditResultItem from "./RedditResultItem";
 import RedditResultSubreddit from "./RedditResultSubreddit";
 import { createSearchUrl, joinWithBaseUrl } from "./UrlBuilder";
 
-export const searchAll = async (subreddit: string, query: string, sort: string, abort?: AbortController) => {
-  const response = await fetch(createSearchUrl(subreddit, true, query, "", 10, sort), {
+export const searchAll = async (
+  subreddit: string,
+  query: string,
+  limit: number,
+  sort: string,
+  abort?: AbortController
+) => {
+  const response = await fetch(createSearchUrl(subreddit, true, query, "", limit, sort), {
     method: "get",
     signal: abort?.signal,
   });
@@ -64,8 +70,8 @@ export const searchAll = async (subreddit: string, query: string, sort: string, 
   } as RedditResult;
 };
 
-export const searchSubreddits = async (query: string, abort?: AbortController) => {
-  const response = await fetch(createSearchUrl("", true, query, "sr", 10), {
+export const searchSubreddits = async (query: string, limit: number, abort?: AbortController) => {
+  const response = await fetch(createSearchUrl("", true, query, "sr", limit), {
     method: "get",
     signal: abort?.signal,
   });
