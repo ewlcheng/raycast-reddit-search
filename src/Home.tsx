@@ -29,7 +29,7 @@ export default function Home({
               actions={
                 <ActionPanel>
                   <Action.Push
-                    title="Search subreddits"
+                    title="Search Subreddits"
                     target={
                       <SubredditList
                         favorites={favorites}
@@ -57,6 +57,7 @@ export default function Home({
                     <Action
                       title="Remove from Favorites"
                       icon={Icon.Trash}
+                      shortcut={{ modifiers: ["cmd"], key: "f" }}
                       onAction={async () => {
                         await removeFavoriteSubreddit(x);
                       }}

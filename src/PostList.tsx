@@ -28,10 +28,6 @@ export default function PostList({
     abortControllerRef.current = new AbortController();
 
     setSearching(true);
-    if (!after) {
-      setResults([]);
-    }
-
     setSort(sort);
 
     if (!query && !subreddit) {
@@ -98,7 +94,7 @@ export default function PostList({
                 : Icon.Text
             }
             title={x.title}
-            accessoryTitle={`Posted ${x.created} r/${x.subreddit}`}
+            accessoryTitle={subreddit ? `Posted ${x.created}` : `Posted ${x.created} r/${x.subreddit}`}
             actions={<PostActionPanel data={x} />}
           />
         ))}
