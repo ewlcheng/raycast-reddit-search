@@ -27,6 +27,9 @@ export default function SubredditPostList({
 
     setSearching(true);
     queryRef.current = query;
+    if (!after) {
+      setResults([]);
+    }
 
     if (!query) {
       setSearching(false);
