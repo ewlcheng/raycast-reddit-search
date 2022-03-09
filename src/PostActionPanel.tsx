@@ -5,6 +5,7 @@ export default function PostActionPanel({ data }: { data: RedditResultItem }) {
   if (data.description) {
     return (
       <ActionPanel>
+        <Action.OpenInBrowser url={data.url} icon={Icon.Globe} />
         <Action.Push
           title="Show Details"
           target={
@@ -22,12 +23,12 @@ ${data.description}`}
             />
           }
         />
-        <Action.OpenInBrowser url={data.url} icon={Icon.Globe} />
       </ActionPanel>
     );
   } else if (data.imageUrl) {
     return (
       <ActionPanel>
+        <Action.OpenInBrowser url={data.url} icon={Icon.Globe} />
         <Action.Push
           title="Show Details"
           target={
@@ -45,12 +46,12 @@ ${data.description}`}
             />
           }
         />
-        <Action.OpenInBrowser url={data.url} icon={Icon.Globe} />
       </ActionPanel>
     );
   } else if (data.contentUrl) {
     return (
       <ActionPanel>
+        <Action.OpenInBrowser url={data.url} icon={Icon.Globe} />
         <Action.Push
           title="Show Details"
           target={
@@ -69,12 +70,12 @@ ${data.contentUrl}`}
             />
           }
         />
-        <Action.OpenInBrowser url={data.url} icon={Icon.Globe} />
       </ActionPanel>
     );
   } else {
     return (
       <ActionPanel>
+        <Action.OpenInBrowser url={data.url} icon={Icon.Globe} />
         <Action.Push
           title="Show Details"
           target={
@@ -92,7 +93,6 @@ ${data.url}`}
             />
           }
         />
-        <Action.OpenInBrowser url={data.url} icon={Icon.Globe} />
       </ActionPanel>
     );
   }

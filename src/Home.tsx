@@ -10,6 +10,7 @@ import { AbortError } from "node-fetch";
 import getPreferences from "./Preferences";
 import { searchAll } from "./RedditApi/Api";
 import Sort from "./Sort";
+import SortOrderDropdown from "./SortOrderDropdown";
 
 export default function Home({
   favorites,
@@ -26,6 +27,7 @@ export default function Home({
   const [searchRedditUrl, setSearchRedditUrl] = useState("");
   const [searching, setSearching] = useState(false);
   const queryRef = useRef<string>("");
+  const [hideDetail, setHideDetail] = useState(false);
 
   const doSearch = async (query: string, sort = RedditSort.relevance, after = "") => {
     abortControllerRef.current?.abort();
@@ -82,8 +84,27 @@ export default function Home({
     };
   }, []);
 
+  const showDetail = !!queryRef.current && !hideDetail && !searching;
+
   return (
-    <List isLoading={searching} onSearchTextChange={doSearch} throttle searchBarPlaceholder="Search Reddit...">
+    <List
+      isShowingDetail={showDetail}
+      isLoading={searching}
+      onSearchTextChange={(text) => doSearch(text, sort)}
+      throttle
+      searchBarPlaceholder="Search Reddit..."
+      searchBarAccessory={
+        <SortOrderDropdown
+          defaultSort={sort}
+          onSortChange={(newSort: Sort) => {
+            if (sort != newSort) {
+              doSearch(queryRef.current, newSort);
+            }
+          }}
+        />
+      }
+      onSelectionChange={(id?: string) => setHideDetail(id === "showMore" || id === "searchOnReddit")}
+    >
       {!queryRef.current && (
         <>
           <List.Section title="More ways to search">
@@ -140,6 +161,7 @@ export default function Home({
         sort={sort}
         doSearch={(sort: Sort, after?: string) => doSearch(queryRef.current, sort, after)}
         searchRedditUrl={searchRedditUrl}
+        showDetail={showDetail}
       />
     </List>
   );
