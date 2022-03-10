@@ -11,6 +11,7 @@ export default function PostList({
   doSearch,
   searchRedditUrl,
   showDetail,
+  toggleShowDetail,
 }: {
   posts: RedditResultItem[];
   subreddit?: string;
@@ -18,6 +19,7 @@ export default function PostList({
   doSearch: (sort: Sort, after?: string) => void;
   searchRedditUrl: string;
   showDetail: boolean;
+  toggleShowDetail: () => void;
 }) {
   if (!posts.length) {
     return null;
@@ -43,7 +45,7 @@ export default function PostList({
               }
               title={x.title}
               accessoryTitle={accessoryTitle}
-              actions={<PostActionPanel data={x} />}
+              actions={<PostActionPanel data={x} showDetail={showDetail} toggleDetail={toggleShowDetail} />}
               detail={<PostDetail data={x} />}
             />
           );

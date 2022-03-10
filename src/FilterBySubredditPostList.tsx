@@ -12,9 +12,13 @@ import SortOrderDropdown from "./SortOrderDropdown";
 export default function FilterBySubredditPostList({
   subreddit,
   subredditName,
+  showDetailSetting,
+  toggleShowDetailSetting,
 }: {
   subreddit: string;
   subredditName: string;
+  showDetailSetting: boolean;
+  toggleShowDetailSetting: () => void;
 }) {
   const abortControllerRef = useRef<AbortController | null>(null);
   const [results, setResults] = useState<RedditResultItem[]>([]);
@@ -23,6 +27,7 @@ export default function FilterBySubredditPostList({
   const [searching, setSearching] = useState(true);
   const queryRef = useRef<string>("");
   const [hideDetail, setHideDetail] = useState(false);
+  const [ownShowDetailSetting, setOwnShowDetailSetting] = useState(showDetailSetting);
 
   const doSearch = async (query: string, sort = redditSort.relevance, after = "") => {
     abortControllerRef.current?.abort();
@@ -81,7 +86,7 @@ export default function FilterBySubredditPostList({
     };
   }, []);
 
-  const showDetail = !hideDetail && !searching;
+  const showDetail = ownShowDetailSetting && !hideDetail && !searching;
 
   return (
     <List
@@ -108,7 +113,11 @@ export default function FilterBySubredditPostList({
         sort={sort}
         doSearch={(sort: Sort, after?: string) => doSearch(queryRef.current, sort, after)}
         searchRedditUrl={searchRedditUrl}
-        showDetail={showDetail}
+        showDetail={ownShowDetailSetting}
+        toggleShowDetail={() => {
+          toggleShowDetailSetting();
+          setOwnShowDetailSetting(!ownShowDetailSetting);
+        }}
       />
     </List>
   );
